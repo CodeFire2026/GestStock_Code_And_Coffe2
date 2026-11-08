@@ -7,9 +7,9 @@
  * Cada producto tiene un codigo, nombre, descripcion,
  * seccion, precio, stock y stock minimo.
  */
+
 public class Producto {
 
-    // ATRIBUTOS DEL PRODUCTO
     private final int codigo;
     private String nombre;
     private String descripcion;
@@ -19,20 +19,28 @@ public class Producto {
     private int stockMinimo;
     private boolean activo;
 
-    // CONSTRUCTOR
-    // Permite crear un producto con sus datos iniciales.
-    public Producto(int codigo, String nombre,
+public Producto(int codigo, String nombre,
                     String descripcion, int seccion,
                     double precio, int stock,
                     int stockMinimo) {
 
+        if (codigo <= 0) {
+            throw new IllegalArgumentException(
+                "El codigo debe ser mayor a cero.");
+        }
+
+        if (stock < 0) {
+            throw new IllegalArgumentException(
+                "El stock inicial no puede ser negativo.");
+        }
+
         this.codigo = codigo;
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.seccion = seccion;
-        this.precio = precio;
+        setNombre(nombre);
+        setDescripcion(descripcion);
+        setSeccion(seccion);
+        setPrecio(precio);
+        setStockMinimo(stockMinimo);
         this.stock = stock;
-        this.stockMinimo = stockMinimo;
         this.activo = true;
     }
 
@@ -155,4 +163,10 @@ public class Producto {
     public void darDeBaja() {
         activo = false;
     }
+
+    // Permite recuperar un producto dado de baja.
+    public void reactivar() {
+        activo = true;
+    }
+
 }
