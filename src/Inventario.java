@@ -80,6 +80,32 @@ public class Inventario {
         return null;
     }
 
+    // Registra el ingreso de stock de un producto.
+    public void registrarIngresoStock(int codigo, int cantidad) {
+        Producto producto = buscarPorCodigo(codigo);
+
+        if (producto == null) {
+            throw new IllegalArgumentException(
+                "No existe un producto activo con ese codigo."
+            );
+        }
+
+        producto.ingresarStock(cantidad);
+    }
+
+    // Registra el egreso de stock de un producto.
+    public void registrarEgresoStock(int codigo, int cantidad) {
+        Producto producto = buscarPorCodigo(codigo);
+
+        if (producto == null) {
+            throw new IllegalArgumentException(
+                "No existe un producto activo con ese codigo."
+            );
+        }
+
+        producto.egresarStock(cantidad);
+    }
+
     // Devuelve todos los productos activos.
     public List<Producto> listarActivos() {
         ArrayList<Producto> encontrados =
@@ -96,6 +122,11 @@ public class Inventario {
 
     // Filtra los productos segun su seccion.
     public List<Producto> listarPorSeccion(int seccion) {
+                if (seccion < 1 || seccion > 6) {
+            throw new IllegalArgumentException(
+                "La seccion debe estar entre 1 y 6."
+            );
+        }
         ArrayList<Producto> encontrados =
                 new ArrayList<Producto>();
 
@@ -155,11 +186,11 @@ public class Inventario {
         ArrayList<Producto> encontrados =
                 new ArrayList<Producto>();
 
-        for (Producto producto : productos) {
-            if (producto.necesitaReposicion()) {
-                encontrados.add(producto);
-            }
-        }
+for (Producto producto : productos) {
+    if (producto.isActivo() && producto.necesitaReposicion()) {
+        encontrados.add(producto);
+    }
+}
 
         return encontrados;
     }
