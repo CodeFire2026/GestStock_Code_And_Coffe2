@@ -188,15 +188,23 @@ private void mostrarMenuProductos() {
         System.out.println("3. Buscar producto por nombre");
         System.out.println("4. Filtrar productos por seccion");
         System.out.println("5. Reportes y estadisticas");
+        System.out.println("6. Consultar producto por codigo");
+        System.out.println("7. Modificar producto (ADMIN)");
+        System.out.println("8. Dar de baja producto (ADMIN)");
+        System.out.println("9. Reactivar producto (ADMIN)");
         System.out.println("0. Volver al menu principal");
 
         opcion = consola.leerEnteroEnRango(
-            "Seleccione una opcion: ", 0, 5
+            "Seleccione una opcion: ", 0, 9
         );
 
         switch (opcion) {
             case 1:
-                registrarProducto();
+                if (usuarioActual.esAdministrador()) {
+                    registrarProducto();
+                } else {
+                    mostrarAccesoDenegado();
+                }
                 break;
 
             case 2:
@@ -213,6 +221,34 @@ private void mostrarMenuProductos() {
 
             case 5:
                 mostrarReportesInventario();
+                break;
+
+            case 6:
+                consultarProductoPorCodigo();
+                break;
+
+            case 7:
+                if (usuarioActual.esAdministrador()) {
+                    modificarProducto();
+                } else {
+                    mostrarAccesoDenegado();
+                }
+                break;
+
+            case 8:
+                if (usuarioActual.esAdministrador()) {
+                    darDeBajaProducto();
+                } else {
+                    mostrarAccesoDenegado();
+                }
+                break;
+
+            case 9:
+                if (usuarioActual.esAdministrador()) {
+                    reactivarProducto();
+                } else {
+                    mostrarAccesoDenegado();
+                }
                 break;
         }
 
@@ -415,6 +451,137 @@ private void cambiarRolUsuario() {
         System.out.println("\nError: " + e.getMessage());
     }
 
+    consola.esperarEnter();
+}
+
+// Permite consultar por codigo, incluso cuando el producto esta inactivo.
+private void consultarProductoPorCodigo() {
+    consola.limpiarPantalla();
+    System.out.println("=== CONSULTAR PRODUCTO POR CODIGO ===");
+    int codigo = consola.leerEnteroMayorACero("Codigo: ");
+    Producto producto = inventario.buscarPorCodigoIncluyendoInactivos(codigo);
+
+    if (producto == null) {
+        System.out.println("\nNo se encontro un producto con ese codigo.");
+    } else {
+        mostrarDetalleProducto(producto);
+    }
+    consola.esperarEnter();
+}
+
+// Presenta todos los campos de un producto y su estado.
+private void mostrarDetalleProducto(Producto producto) {
+    System.out.println("\nCodigo: " + producto.getCodigo());
+    System.out.println("Nombre: " + producto.getNombre());
+    System.out.println("Descripcion: " + producto.getDescripcion());
+    System.out.println("Seccion: " + Inventario.nombreSeccion(producto.getSeccion()));
+    System.out.println("Precio: $" + Consola.dinero(producto.getPrecio()));
+    System.out.println("Stock: " + producto.getStock());
+    System.out.println("Stock minimo: " + producto.getStockMinimo());
+    System.out.println("Estado: " + (producto.isActivo() ? "ACTIVO" : "INACTIVO"));
+}
+
+// Edita datos de un producto activo sin modificar su codigo ni su stock.
+private void modificarProducto() {
+    consola.limpiarPantalla();
+    System.out.println("=== MODIFICAR PRODUCTO ===");
+    int codigo = consola.leerEnteroMayorACero("Codigo: ");
+    Producto producto = inventario.buscarPorCodigo(codigo);
+    if (producto == null) {
+        System.out.println("\nNo existe un producto activo con ese codigo.");
+        consola.esperarEnter();
+        return;
+    }
+
+    mostrarDetalleProducto(producto);
+    System.out.println("\n1. Nombre");
+    System.out.println("2. Descripcion");
+    System.out.println("3. Seccion");
+    System.out.println("4. Precio");
+    System.out.println("5. Stock minimo");
+    System.out.println("0. Cancelar");
+    int opcion = consola.leerEnteroEnRango("Opcion: ", 0, 5);
+    if (opcion == 0) {
+        System.out.println("Modificacion cancelada.");
+        consola.esperarEnter();
+        return;
+    }
+
+    try {
+        switch (opcion) {
+            case 1:
+                producto.setNombre(consola.leerTextoNoVacio("Nuevo nombre: "));
+                break;
+            case 2:
+                producto.setDescripcion(consola.leerTexto("Nueva descripcion: "));
+                break;
+            case 3:
+                int seccion = consola.leerEnteroEnRango("Nueva seccion (1-6): ", 1, 6);
+                producto.setSeccion(seccion);
+                break;
+            case 4:
+                producto.setPrecio(consola.leerRealNoNegativo("Nuevo precio: "));
+                break;
+            case 5:
+                producto.setStockMinimo(consola.leerEnteroNoNegativo("Nuevo stock minimo: "));
+                break;
+            default:
+                break;
+        }
+        System.out.println("\nProducto actualizado correctamente.");
+        mostrarDetalleProducto(producto);
+    } catch (IllegalArgumentException e) {
+        System.out.println("\nError: " + e.getMessage());
+    }
+    consola.esperarEnter();
+}
+
+// Cambia el estado del producto sin borrar el registro.
+private void darDeBajaProducto() {
+    consola.limpiarPantalla();
+    System.out.println("=== DAR DE BAJA PRODUCTO ===");
+    int codigo = consola.leerEnteroMayorACero("Codigo: ");
+    Producto producto = inventario.buscarPorCodigo(codigo);
+    if (producto == null) {
+        System.out.println("\nNo existe un producto activo con ese codigo.");
+    } else {
+        mostrarDetalleProducto(producto);
+        String confirmacion = consola.leerTexto("\nConfirmar baja? (S/N): ");
+        if (confirmacion.trim().equalsIgnoreCase("S")) {
+            producto.darDeBaja();
+            System.out.println("\nProducto dado de baja. Conserva su codigo.");
+        } else {
+            System.out.println("\nBaja cancelada.");
+        }
+    }
+    consola.esperarEnter();
+}
+
+// Recupera el mismo registro y codigo de un producto dado de baja.
+private void reactivarProducto() {
+    consola.limpiarPantalla();
+    System.out.println("=== REACTIVAR PRODUCTO ===");
+    int codigo = consola.leerEnteroMayorACero("Codigo: ");
+    Producto producto = inventario.buscarPorCodigoIncluyendoInactivos(codigo);
+    if (producto == null) {
+        System.out.println("\nNo existe un producto con ese codigo.");
+    } else if (producto.isActivo()) {
+        System.out.println("\nEl producto ya esta activo.");
+    } else {
+        mostrarDetalleProducto(producto);
+        String confirmacion = consola.leerTexto("\nConfirmar reactivacion? (S/N): ");
+        if (confirmacion.trim().equalsIgnoreCase("S")) {
+            producto.reactivar();
+            System.out.println("\nProducto reactivado correctamente.");
+        } else {
+            System.out.println("\nReactivacion cancelada.");
+        }
+    }
+    consola.esperarEnter();
+}
+
+private void mostrarAccesoDenegado() {
+    System.out.println("\nAcceso denegado: operacion exclusiva de administradores.");
     consola.esperarEnter();
 }
 
