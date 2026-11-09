@@ -179,10 +179,13 @@ private void mostrarMenuProductos() {
         System.out.println("================================");
         System.out.println("1. Registrar producto");
         System.out.println("2. Listar productos");
+        System.out.println("3. Buscar producto por nombre");
+        System.out.println("4. Filtrar productos por seccion");
+        System.out.println("5. Reportes y estadisticas");
         System.out.println("0. Volver al menu principal");
 
         opcion = consola.leerEnteroEnRango(
-            "Seleccione una opcion: ", 0, 2
+            "Seleccione una opcion: ", 0, 5
         );
 
         switch (opcion) {
@@ -193,11 +196,22 @@ private void mostrarMenuProductos() {
             case 2:
                 listarProductos();
                 break;
+
+            case 3:
+                buscarProductoPorNombre();
+                break;
+
+            case 4:
+                filtrarProductosPorSeccion();
+                break;
+
+            case 5:
+                mostrarReportesInventario();
+                break;
         }
 
     } while (opcion != 0);
 }
-
 // Registra un producto nuevo en el inventario.
 private void registrarProducto() {
     consola.limpiarPantalla();
@@ -293,7 +307,43 @@ private void listarProductos() {
 
     consola.esperarEnter();
 }
+// Busca productos por nombre o palabras.
+private void buscarProductoPorNombre() {
+    consola.limpiarPantalla();
 
+    System.out.println("================================");
+    System.out.println("      BUSCAR PRODUCTO");
+    System.out.println("================================");
+
+    String texto = consola.leerTextoNoVacio(
+        "Ingrese el nombre o palabra a buscar: "
+    );
+
+    java.util.List<Producto> resultados =
+        inventario.buscarPorNombre(texto);
+
+    if (resultados.isEmpty()) {
+        System.out.println("\nNo se encontraron productos.");
+    } else {
+        System.out.println("\nResultados encontrados:");
+
+        for (Producto producto : resultados) {
+            System.out.println("\nCodigo: " + producto.getCodigo());
+            System.out.println("Nombre: " + producto.getNombre());
+            System.out.println(
+                "Seccion: " +
+                Inventario.nombreSeccion(producto.getSeccion())
+            );
+            System.out.println(
+                "Precio: $" + Consola.dinero(producto.getPrecio())
+            );
+            System.out.println("Stock: " + producto.getStock());
+            System.out.println("--------------------------------");
+        }
+    }
+
+    consola.esperarEnter();
+}
 // Permite ingresar unidades a un producto existente.
 private void ingresarStock() {
     consola.limpiarPantalla();
@@ -331,6 +381,91 @@ private void ingresarStock() {
 
     } catch (IllegalArgumentException e) {
         System.out.println("\nError: " + e.getMessage());
+    }
+
+    consola.esperarEnter();
+}
+// Filtra los productos segun su seccion.
+private void filtrarProductosPorSeccion() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("    FILTRAR POR SECCION");
+    System.out.println("================================");
+    System.out.println("1. Bebidas");
+    System.out.println("2. Frutas");
+    System.out.println("3. Verduras");
+    System.out.println("4. Carnes");
+    System.out.println("5. Lacteos");
+    System.out.println("6. Almacen");
+
+    int seccion = consola.leerEnteroEnRango(
+        "Seleccione una seccion: ", 1, 6
+    );
+
+    java.util.List<Producto> resultados =
+        inventario.listarPorSeccion(seccion);
+
+    System.out.println(
+        "\nProductos de la seccion: " +
+        Inventario.nombreSeccion(seccion)
+    );
+
+    if (resultados.isEmpty()) {
+        System.out.println("\nNo hay productos en esta seccion.");
+    } else {
+        for (Producto producto : resultados) {
+            System.out.println("\nCodigo: " + producto.getCodigo());
+            System.out.println("Nombre: " + producto.getNombre());
+            System.out.println(
+                "Precio: $" + Consola.dinero(producto.getPrecio())
+            );
+            System.out.println("Stock: " + producto.getStock());
+            System.out.println("--------------------------------");
+        }
+    }
+
+    consola.esperarEnter();
+}
+// Muestra reportes y estadisticas generales del inventario.
+private void mostrarReportesInventario() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("    REPORTES DEL INVENTARIO");
+    System.out.println("================================");
+
+    System.out.println(
+        "\nCantidad de productos activos: " +
+        inventario.cantidadActivos()
+    );
+
+    System.out.println(
+        "Valor total del inventario: $" +
+        Consola.dinero(inventario.valorTotal())
+    );
+
+    Producto masCaro = inventario.productoMasCaro();
+
+    System.out.println("\nPRODUCTO DE MAYOR PRECIO:");
+
+    if (masCaro == null) {
+        System.out.println("No hay productos registrados.");
+    } else {
+        System.out.println("Nombre: " + masCaro.getNombre());
+        System.out.println(
+            "Precio: $" + Consola.dinero(masCaro.getPrecio())
+        );
+    }
+
+    System.out.println("\nCANTIDAD DE PRODUCTOS POR SECCION:");
+
+    int[] cantidades = inventario.contarPorSecciones();
+
+    for (int i = 1; i <= 6; i++) {
+        System.out.println(
+            Inventario.nombreSeccion(i) + ": " + cantidades[i]
+        );
     }
 
     consola.esperarEnter();
