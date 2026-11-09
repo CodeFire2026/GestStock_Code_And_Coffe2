@@ -253,5 +253,22 @@ for (Producto producto : productos) {
             default: return "Desconocida";
         }
     }
+   
+    
+    // Busca un producto por codigo, incluso si esta inactivo.
+    // Se utiliza para consultar y reactivar productos.
+    public Producto buscarPorCodigoIncluyendoInactivos(int codigo) {
+
+        for (Producto producto : productos) {
+
+            if (producto.getCodigo() == codigo) {
+                return producto;
+            }
+        }
+
+        return null;
+    }
+
+    
 
 }
