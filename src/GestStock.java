@@ -55,12 +55,16 @@ public class GestStock {
                     break;
 
                 case 3:
-                    System.out.println(
-                        "\nGestion de usuarios (en desarrollo)."
-                    );
-                    consola.esperarEnter();
+                    if (usuarioActual.esAdministrador()) {
+                        mostrarMenuUsuarios();
+                    } else {
+                        System.out.println(
+                            "\nAcceso denegado. Solo los administradores pueden gestionar usuarios."
+                        );
+                        consola.esperarEnter();
+                    }
                     break;
-
+                    
                 case 0:
                     System.out.println(
                         "\nGracias por utilizar GestStock."
@@ -167,6 +171,7 @@ public class GestStock {
 
         } while (opcion != 0);
     }
+
 // Muestra el menu de gestion de productos.
 private void mostrarMenuProductos() {
     int opcion;
@@ -212,6 +217,206 @@ private void mostrarMenuProductos() {
 
     } while (opcion != 0);
 }
+
+    // Muestra el menu de gestion de usuarios.
+private void mostrarMenuUsuarios() {
+    int opcion;
+
+    do {
+        consola.limpiarPantalla();
+
+        System.out.println("================================");
+        System.out.println("      GESTION DE USUARIOS");
+        System.out.println("================================");
+        System.out.println("1. Registrar usuario");
+        System.out.println("2. Listar usuarios");
+        System.out.println("3. Dar de baja usuario");
+        System.out.println("4. Reactivar usuario");
+        System.out.println("5. Cambiar rol de usuario");
+        System.out.println("0. Volver al menu principal");
+
+        opcion = consola.leerEnteroEnRango(
+            "Seleccione una opcion: ", 0, 5
+        );
+
+        switch (opcion) {
+            case 1:
+                registrarUsuario();
+                break;
+
+            case 2:
+                listarUsuarios();
+                break;
+
+            case 3:
+                darDeBajaUsuario();
+                break;
+
+            case 4:
+                reactivarUsuario();
+                break;
+
+            case 5:
+                cambiarRolUsuario();
+                break;
+        }
+
+    } while (opcion != 0);
+}
+
+// Registra un nuevo usuario.
+private void registrarUsuario() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("       REGISTRAR USUARIO");
+    System.out.println("================================");
+
+    String nombre = consola.leerTextoNoVacio(
+        "Nombre de usuario: "
+    );
+
+    String contrasena = consola.leerTextoNoVacio(
+        "Contrasena: "
+    );
+
+    System.out.println("\nRoles disponibles:");
+    System.out.println("1. ADMIN");
+    System.out.println("2. EMPLEADO");
+
+    int opcionRol = consola.leerEnteroEnRango(
+        "Seleccione el rol: ", 1, 2
+    );
+
+    String rol = (opcionRol == 1) ? "ADMIN" : "EMPLEADO";
+
+    try {
+        boolean registrado = gestorUsuarios.registrarUsuario(
+            nombre, contrasena, rol
+        );
+
+        if (registrado) {
+            System.out.println("\nUsuario registrado correctamente.");
+        } else {
+            System.out.println("\nYa existe un usuario con ese nombre.");
+        }
+
+    } catch (IllegalArgumentException e) {
+        System.out.println("\nError: " + e.getMessage());
+    }
+
+    consola.esperarEnter();
+}
+
+// Lista todos los usuarios registrados.
+private void listarUsuarios() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("       LISTADO DE USUARIOS");
+    System.out.println("================================");
+
+    for (Usuario usuario : gestorUsuarios.listarUsuarios()) {
+        System.out.println("\nNombre: " + usuario.getNombre());
+        System.out.println("Rol: " + usuario.getRol());
+        System.out.println(
+            "Estado: " + (usuario.isActivo() ? "Activo" : "Inactivo")
+        );
+        System.out.println("--------------------------------");
+    }
+
+    if (gestorUsuarios.cantidadUsuarios() == 0) {
+        System.out.println("\nNo hay usuarios registrados.");
+    }
+
+    consola.esperarEnter();
+}
+
+// Da de baja un usuario.
+private void darDeBajaUsuario() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("       DAR DE BAJA USUARIO");
+    System.out.println("================================");
+
+    String nombre = consola.leerTextoNoVacio(
+        "Ingrese el nombre del usuario: "
+    );
+
+    if (nombre.equalsIgnoreCase(usuarioActual.getNombre())) {
+        System.out.println("\nNo puede darse de baja a si mismo.");
+    } else if (gestorUsuarios.darDeBajaUsuario(nombre)) {
+        System.out.println("\nUsuario dado de baja correctamente.");
+    } else {
+        System.out.println("\nNo existe el usuario o ya esta inactivo.");
+    }
+
+    consola.esperarEnter();
+}
+
+// Reactiva un usuario.
+private void reactivarUsuario() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("       REACTIVAR USUARIO");
+    System.out.println("================================");
+
+    String nombre = consola.leerTextoNoVacio(
+        "Ingrese el nombre del usuario: "
+    );
+
+    if (gestorUsuarios.reactivarUsuario(nombre)) {
+        System.out.println("\nUsuario reactivado correctamente.");
+    } else {
+        System.out.println("\nNo existe el usuario o ya esta activo.");
+    }
+
+    consola.esperarEnter();
+}
+
+// Cambia el rol de un usuario.
+private void cambiarRolUsuario() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("      CAMBIAR ROL DE USUARIO");
+    System.out.println("================================");
+
+    String nombre = consola.leerTextoNoVacio(
+        "Ingrese el nombre del usuario: "
+    );
+
+    if (nombre.equalsIgnoreCase(usuarioActual.getNombre())) {
+        System.out.println("\nNo puede cambiar su propio rol.");
+        consola.esperarEnter();
+        return;
+    }
+
+    System.out.println("\nRoles disponibles:");
+    System.out.println("1. ADMIN");
+    System.out.println("2. EMPLEADO");
+
+    int opcion = consola.leerEnteroEnRango(
+        "Seleccione el nuevo rol: ", 1, 2
+    );
+
+    String nuevoRol = (opcion == 1) ? "ADMIN" : "EMPLEADO";
+
+    try {
+        if (gestorUsuarios.cambiarRolUsuario(nombre, nuevoRol)) {
+            System.out.println("\nRol actualizado correctamente.");
+        } else {
+            System.out.println("\nNo existe el usuario o esta inactivo.");
+        }
+    } catch (IllegalArgumentException e) {
+        System.out.println("\nError: " + e.getMessage());
+    }
+
+    consola.esperarEnter();
+}
+
 // Registra un producto nuevo en el inventario.
 private void registrarProducto() {
     consola.limpiarPantalla();
