@@ -18,6 +18,7 @@ public class GestStock {
     public GestStock() {
     consola = new Consola();
     inventario = new Inventario();
+    DatosEjemplo.cargarProductos(inventario);
     gestorUsuarios = new GestorUsuarios();
 
     gestorUsuarios.registrarUsuario("admin", "admin123", "ADMIN");
@@ -483,35 +484,70 @@ private void registrarProducto() {
 }
 
 // Muestra todos los productos activos.
+
 private void listarProductos() {
     consola.limpiarPantalla();
 
-    System.out.println("================================");
-    System.out.println("       LISTADO DE PRODUCTOS");
-    System.out.println("================================");
+    System.out.println(
+        "\n--- LISTADO COMPLETO DE PRODUCTOS ---\n"
+    );
 
-    if (inventario.listarActivos().isEmpty()) {
-        System.out.println("\nNo hay productos registrados.");
-    } else {
-        for (Producto producto : inventario.listarActivos()) {
-            System.out.println("\nCodigo: " + producto.getCodigo());
-            System.out.println("Nombre: " + producto.getNombre());
-            System.out.println(
-                "Seccion: " +
-                Inventario.nombreSeccion(producto.getSeccion())
-            );
-            System.out.println("Precio: $" +
-                Consola.dinero(producto.getPrecio()));
-            System.out.println("Stock: " + producto.getStock());
-            System.out.println(
-                "Stock minimo: " + producto.getStockMinimo()
-            );
-            System.out.println("--------------------------------");
-        }
+    java.util.List<Producto> productos =
+        inventario.listarActivos();
+
+    if (productos.isEmpty()) {
+        System.out.println("No hay productos registrados.");
+        consola.esperarEnter();
+        return;
     }
+
+    System.out.printf(
+        "%-4s | %-30s | %-10s | %-12s | %-7s | %-5s%n",
+        "COD", "NOMBRE", "SECCION", "PRECIO", "STOCK", "MIN."
+    );
+
+    System.out.println(
+        "-----+--------------------------------+------------+" +
+        "--------------+---------+------"
+    );
+
+    for (Producto producto : productos) {
+        String nombre = producto.getNombre();
+
+        if (nombre.length() > 30) {
+            nombre = nombre.substring(0, 27) + "...";
+        }
+
+        String stockTexto = String.valueOf(
+            producto.getStock()
+        );
+
+        if (producto.necesitaReposicion()) {
+            stockTexto += " (!)";
+        }
+
+        System.out.printf(
+            "%-4d | %-30s | %-10s | $%-11s | %-7s | %-5d%n",
+            producto.getCodigo(),
+            nombre,
+            Inventario.nombreSeccion(producto.getSeccion()),
+            Consola.dinero(producto.getPrecio()),
+            stockTexto,
+            producto.getStockMinimo()
+        );
+    }
+
+    System.out.println(
+        "\nTotal de productos activos: " + productos.size()
+    );
+
+    System.out.println(
+        "(!) Producto con stock bajo o en el minimo."
+    );
 
     consola.esperarEnter();
 }
+
 // Busca productos por nombre o palabras.
 private void buscarProductoPorNombre() {
     consola.limpiarPantalla();
