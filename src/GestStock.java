@@ -93,20 +93,15 @@ public class GestStock {
                    
 
                 case 2:
-                    System.out.println("\nEgreso de stock.");
-                    consola.esperarEnter();
+                    egresarStock();
                     break;
-
+                    
                 case 3:
-                    System.out.println("\nConsulta de stock.");
-                    consola.esperarEnter();
+                    consultarStock();
                     break;
 
                 case 4:
-                    System.out.println(
-                        "\nProductos con stock bajo."
-                    );
-                    consola.esperarEnter();
+                    mostrarProductosStockBajo();
                     break;
             }
 
@@ -281,6 +276,118 @@ private void ingresarStock() {
     consola.esperarEnter();
 }
 
+// Permite egresar unidades de un producto existente.
+private void egresarStock() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("          EGRESAR STOCK");
+    System.out.println("================================");
+
+    int codigo = consola.leerEnteroMayorACero(
+        "Ingrese el codigo del producto: "
+    );
+
+    Producto producto = inventario.buscarPorCodigo(codigo);
+
+    if (producto == null) {
+        System.out.println("\nNo se encontro el producto.");
+        consola.esperarEnter();
+        return;
+    }
+
+    System.out.println("\nProducto: " + producto.getNombre());
+    System.out.println("Stock actual: " + producto.getStock());
+
+    int cantidad = consola.leerEnteroMayorACero(
+        "Cantidad que desea egresar: "
+    );
+
+    try {
+        producto.egresarStock(cantidad);
+
+        System.out.println("\nStock actualizado correctamente.");
+        System.out.println(
+            "Nuevo stock: " + producto.getStock()
+        );
+
+    } catch (IllegalArgumentException e) {
+        System.out.println("\nError: " + e.getMessage());
+    }
+
+    consola.esperarEnter();
+}
+
+// Permite consultar la informacion de stock de un producto.
+private void consultarStock() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("         CONSULTAR STOCK");
+    System.out.println("================================");
+
+    int codigo = consola.leerEnteroMayorACero(
+        "Ingrese el codigo del producto: "
+    );
+
+    Producto producto = inventario.buscarPorCodigo(codigo);
+
+    if (producto == null) {
+        System.out.println("\nNo se encontro el producto.");
+    } else {
+        System.out.println("\n================================");
+        System.out.println("       DATOS DEL PRODUCTO");
+        System.out.println("================================");
+
+        System.out.println("Codigo: " + producto.getCodigo());
+        System.out.println("Nombre: " + producto.getNombre());
+
+        System.out.println(
+            "Seccion: " +
+            Inventario.nombreSeccion(producto.getSeccion())
+        );
+
+        System.out.println(
+            "Precio: $" + Consola.dinero(producto.getPrecio())
+        );
+
+        System.out.println("Stock actual: " + producto.getStock());
+        System.out.println("Stock minimo: " + producto.getStockMinimo());
+
+        if (producto.necesitaReposicion()) {
+            System.out.println("\n¡ATENCION! Este producto necesita reposicion.");
+        } else {
+            System.out.println("\nStock suficiente.");
+        }
+    }
+
+    consola.esperarEnter();
+}
+// Muestra los productos que necesitan reposicion.
+private void mostrarProductosStockBajo() {
+    consola.limpiarPantalla();
+
+    System.out.println("================================");
+    System.out.println("     PRODUCTOS CON STOCK BAJO");
+    System.out.println("================================");
+
+    if (inventario.productosBajoStock().isEmpty()) {
+        System.out.println("\nNo hay productos con stock bajo.");
+    } else {
+        for (Producto producto : inventario.productosBajoStock()) {
+
+            System.out.println("\nCodigo: " + producto.getCodigo());
+            System.out.println("Nombre: " + producto.getNombre());
+            System.out.println("Stock actual: " + producto.getStock());
+            System.out.println("Stock minimo: " + producto.getStockMinimo());
+
+            System.out.println("--------------------------------");
+        }
+    }
+
+    consola.esperarEnter();
+}
+
     // Muestra las opciones principales.
     private void mostrarMenuPrincipal() {
         consola.limpiarPantalla();
@@ -306,3 +413,4 @@ private void ingresarStock() {
         System.out.println();
     }
 }
+
