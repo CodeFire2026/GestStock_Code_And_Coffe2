@@ -11,12 +11,18 @@ public class GestStock {
     // Objetos principales del sistema.
     private final Consola consola;
     private final Inventario inventario;
+    private final GestorUsuarios gestorUsuarios;
+    private Usuario usuarioActual;
 
     // Constructor.
     public GestStock() {
-        consola = new Consola();
-        inventario = new Inventario();
-    }
+    consola = new Consola();
+    inventario = new Inventario();
+    gestorUsuarios = new GestorUsuarios();
+
+    gestorUsuarios.registrarUsuario("admin", "admin123", "ADMIN");
+    gestorUsuarios.registrarUsuario("empleado", "1234", "EMPLEADO");
+}
 
     // Punto de entrada del programa.
     public static void main(String[] args) {
@@ -26,7 +32,13 @@ public class GestStock {
 
     // Controla la ejecucion del menu principal.
     public void ejecutar() {
-        int opcion;
+
+    if (!iniciarSesion()) {
+        consola.cerrar();
+        return;
+    }
+
+    int opcion;
 
         do {
             mostrarMenuPrincipal();
@@ -64,6 +76,54 @@ public class GestStock {
         } while (opcion != 0);
 
         consola.cerrar();
+    }
+
+    // Solicita las credenciales para ingresar al sistema.
+    private boolean iniciarSesion() {
+
+        consola.limpiarPantalla();
+
+        System.out.println("================================");
+        System.out.println("     BIENVENIDO A GESTSTOCK");
+        System.out.println("================================");
+
+        for (int intento = 1; intento <= 3; intento++) {
+
+            String nombre = consola.leerTextoNoVacio(
+                "Usuario: "
+            );
+
+            String contrasena = consola.leerTexto(
+                "Contrasena: "
+            );
+
+            usuarioActual = gestorUsuarios.iniciarSesion(
+                nombre, contrasena
+            );
+
+            if (usuarioActual != null) {
+                System.out.println(
+                    "\nBienvenido, " + usuarioActual.getNombre()
+                );
+
+                consola.esperarEnter();
+                return true;
+            }
+
+            System.out.println(
+                "\nUsuario o contrasena incorrectos."
+            );
+
+            System.out.println(
+                "Intentos restantes: " + (3 - intento)
+            );
+        }
+
+        System.out.println(
+            "\nDemasiados intentos. Acceso denegado."
+        );
+
+        return false;
     }
 
     // Muestra el menu de gestion de stock.
